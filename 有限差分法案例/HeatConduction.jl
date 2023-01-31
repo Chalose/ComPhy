@@ -36,9 +36,9 @@ function ADIdiffusion(h::Float64, dt::Float64, X::Vector{Float64}, Y::Vector{Flo
     b = [0.0; 1.0; 1.0; 1.0]     # 边界条件系数b1=0,b234=1    
 
     alpha = 100.0                # 最高加热端温度
-    beta = 2.5                  # 控制加热范围
+    beta = 2.5                   # 控制加热范围
     c1 = zeros(1, N)
-    c1[1, :] .= [alpha*exp(-1/(2*beta^2) * x.^2) for x = X[1]:h:X[2]]   # 1边界高斯加热
+    c1[1, :] .= [alpha*exp(-1/(2*beta^2) * x.^2) for x = X[1]:h:X[2]]   # 1边界高斯型温度分布
     c2 = 0.0;  c3 = 0.0;  c4 = 0.0;                                     # 2，3，4边界绝热
 
     # 交替方向解向量ux,uy与系数矩阵Ax,Ay
