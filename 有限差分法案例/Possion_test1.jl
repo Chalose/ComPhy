@@ -11,7 +11,7 @@ using Plots
 M = 100               # 每行节点数
 h = 2/(M - 1)         # 步长
 eps = 1e-8            # 迭代残差限
-f = [-2pi^2*sin(pi*x)*cos(pi*y) for y = -1:h:1, x = -1:h:1]    # 源项
+f = [-2pi^2*sin(pi*x)*cos(pi*y) for y = 1:-h:-1, x = -1:h:1]    # 源项
 
 # 求解函数
 function SORPossion(M::Int64, h::Float64, eps::Float64, f::Matrix{Float64})
