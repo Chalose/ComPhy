@@ -7,12 +7,12 @@ using Plots
 using SparseArrays
 using LinearAlgebra
 
-# 势函数
+#= 势函数
 function Vfun(i::Int64, k::Int64, dx::Float64, dt::Float64, X::Vector{Float64}, T::Vector{Float64})
-    # 这里采用定常方势垒，也可以设置含时势
-    a = 1.0
-    b = 2.0
-    V₀ = 50.0
+    # 定常方势垒，也可以设置含时势
+    a = 2.0
+    b = 4.0
+    V₀ = 30.0
     #t = T[1] + (k-1)*dt
     x = X[1] + (i-1)*dx
     if a<=x<=b
@@ -20,6 +20,17 @@ function Vfun(i::Int64, k::Int64, dx::Float64, dt::Float64, X::Vector{Float64}, 
     else
         return 0.0
     end
+end
+=#
+
+function Vfun(i::Int64, k::Int64, dx::Float64, dt::Float64, X::Vector{Float64}, T::Vector{Float64})
+    # 一维谐振子势场
+    x₀ = 3.0
+    a = 20.0
+    VectorX = Vector{Float64}(X[1]:dx:X[2])
+    V = a*(VectorX .- x₀).^2
+
+    return V[i]
 end
 
 # 隐式求解
@@ -32,14 +43,14 @@ function Solver_1D(dx::Float64, dt::Float64, X::Vector{Float64}, T::Vector{Float
 
     # 初值条件
     ψ = Array{ComplexF64}(zeros(N, kmax))
-    A₀ = 0.75
-    a = 35.0
-    ω = 5.0
-    c = 1.0;  k = ω/c
-    ψ[:, 1] = A₀*exp.(-a*(VectorX .- 0.25).^2).*exp.(im*(k*VectorX))   # Gauss波包
+    δₓ = 0.25     # Gauss波包位置标准差
+    vg = 6.0      # 波包群速度
+    p₀ = 1.0*vg
+    x₀ = 1.5      # 波包中心初始位置
+    ψ[:, 1] = 1/(2π*δₓ^2)^(1/4) * exp.(-(VectorX .- x₀).^2 / (2*δₓ)^2) .* exp.(im*(p₀*VectorX))
 
     # 边界设置
-    a = [1.0; 1.0]   # Dirichlet boundary: Ψ=0
+    a = [1.0; 1.0]      # Dirichlet boundary: Ψ=0
     b = [0.0; 0.0]
     c = zeros(2, kmax)  # 第一、二行分别为c₁、c₂随时间演化
 
@@ -129,15 +140,15 @@ end
 # 主函数
 function main()
     # 设置
-    dx = 0.01
+    dx = 0.02
     dt = 0.001
-    X = [-1.0; 4.0]   # 求解域范围: X[Xmin; Xmax]
-    T = [0.0; 1.0]    # 时间范围：T[tmin; tmax]
+    X = [0.0; 6.0]     # 求解域范围: X[Xmin; Xmax]
+    T = [0.0; 2.0]     # 时间范围：T[tmin; tmax]
     # 求解
     ψ = @time Solver_1D(dx, dt, X, T)
-    Re_ψ = real.(ψ)
-    Im_ψ = imag.(ψ)
-    Abs2_ψ = abs2.(ψ)
+    Re_ψ = real.(ψ)    # 实部
+    Im_ψ = imag.(ψ)    # 虚部
+    Abs2_ψ = abs2.(ψ)  # 概率密度
     # 绘图
     Xx = LinRange(X[1]:dx:X[2])
     V = [Vfun(i, 1, dx, dt, X, T) for i=1:length(Xx)]
@@ -145,19 +156,26 @@ function main()
     @gif for k in 1:length(Tt)
         tk = T[1] + (k - 1)*dt
         tk = string("t = ", tk, " (a.u.)")
-        plot(Xx, Abs2_ψ[:, k],
-        xlabel="x (a.u.)", 
-        ylabel="|ψ|²", 
-        ylims=(-0.05, 1.0), 
-        title=tk, 
-        label="Electron", 
-        lengend=:topleft)
+        plot(
+            Xx, Abs2_ψ[:, k]; 
+            xlabel="x (a.u.)", 
+            ylabel="|ψ|²",  
+            ylims=(-0.05, 2.0), 
+            title=tk, 
+            label="Electron", 
+            lengend=:topleft
+            )
 
-        plot!(twinx(), Xx, V, 
-        ylabel="E (a.u.)",
-        color=:red,
-        label="Potential function", 
-        lengend=:topright)
-    end
+        plot!(
+            twinx(), Xx, V, 
+            ylabel="E (a.u.)",
+            color=:red,
+            label="Potential function", 
+            lengend=:topright
+            )
+    end every 10
+
+    #return (Re_ψ, Im_ψ, Abs2_ψ)
 end
 main()
+#(Re_ψ, Im_ψ, Abs2_ψ) = main()
