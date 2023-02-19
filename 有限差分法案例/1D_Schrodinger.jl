@@ -27,10 +27,10 @@ function Vfun(i::Int64, k::Int64, dx::Float64, dt::Float64, X::Vector{Float64}, 
     # 一维谐振子势场
     x₀ = 3.0
     a = 20.0
-    VectorX = Vector{Float64}(X[1]:dx:X[2])
-    V = a*(VectorX .- x₀).^2
+    x = X[1] + (i-1)*dx
+    V = a*(x - x₀)^2
 
-    return V[i]
+    return V
 end
 
 # 隐式求解
